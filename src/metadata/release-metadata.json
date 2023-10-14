@@ -1,5 +1,5 @@
 {
-  "name": "SimpleStorage",
-  "description": "Aragon Boilerplate Plugin",
+  "name": "TribeFactory",
+  "description": "Plugin for deploying Tribe DAOs and Sub-DAOs",
   "images": {}
 }

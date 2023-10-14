@@ -4,11 +4,36 @@ pragma solidity 0.8.21;
 import { IPluginSetup, PluginSetup } from "@aragon/osx/framework/plugin/setup/PluginSetup.sol";
 import { DAO } from "@aragon/osx/core/dao/DAO.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { DAOFactory } from "@aragon/osx/framework/dao/DAOFactory.sol";
+import { PluginRepoFactory } from "@aragon/osx/framework/plugin/repo/PluginRepoFactory.sol";
 
 import { Test } from "forge-std/Test.sol";
 
 contract AragonTest is Test {
     bytes internal constant EMPTY_BYTES = "";
+
+    error UnknownNetwork();
+
+    function getProtocol(string memory _network)
+        internal
+        view
+        returns (DAOFactory _daoFactory, PluginRepoFactory _repoFactory)
+    {
+        bytes32 network = keccak256(abi.encodePacked(_network));
+        address[] memory protocol;
+
+        if (network == keccak256(abi.encodePacked("mainnet"))) protocol = vm.envAddress("MAINNET", ",");
+        else if (network == keccak256(abi.encodePacked("goerli"))) protocol = vm.envAddress("GOERLI", ",");
+        else if (network == keccak256(abi.encodePacked("sepolia"))) protocol = vm.envAddress("SEPOLIA", ",");
+        else if (network == keccak256(abi.encodePacked("polygon"))) protocol = vm.envAddress("POLYGON", ",");
+        else if (network == keccak256(abi.encodePacked("mumbai"))) protocol = vm.envAddress("MUMBAI", ",");
+        else if (network == keccak256(abi.encodePacked("baseGoerli"))) protocol = vm.envAddress("BASE_GOERLI", ",");
+        else if (network == keccak256(abi.encodePacked("baseMainnet"))) protocol = vm.envAddress("BASE_MAINNET", ",");
+        else revert UnknownNetwork();
+
+        _daoFactory = DAOFactory(protocol[0]);
+        _repoFactory = PluginRepoFactory(protocol[1]);
+    }
 
     /// @notice Creates a mock DAO with a plugin.
     /// @param setup The plugin setup interface.

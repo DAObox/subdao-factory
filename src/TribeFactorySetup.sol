@@ -4,14 +4,14 @@ pragma solidity ^0.8.17;
 
 import { PermissionLib } from "@aragon/osx/core/permission/PermissionLib.sol";
 import { PluginSetup, IPluginSetup } from "@aragon/osx/framework/plugin/setup/PluginSetup.sol";
-import { SimpleStorage } from "./SimpleStorage.sol";
+import { TribeFactory } from "./TribeFactory.sol";
 
-/// @title SimpleStorageSetup build 1
-contract SimpleStorageSetup is PluginSetup {
+/// @title TribeFactorySetup build 1
+contract TribeFactorySetup is PluginSetup {
     address private immutable IMPLEMEMTATION;
 
     constructor() {
-        IMPLEMEMTATION = address(new SimpleStorage());
+        IMPLEMEMTATION = address(new TribeFactory());
     }
 
     /// @inheritdoc IPluginSetup
@@ -22,10 +22,11 @@ contract SimpleStorageSetup is PluginSetup {
         external
         returns (address plugin, PreparedSetupData memory preparedSetupData)
     {
-        uint256 number = abi.decode(_data, (uint256));
+        (address daoFactory) = abi.decode(_data, (address));
 
-        plugin =
-            createERC1967Proxy(IMPLEMEMTATION, abi.encodeWithSelector(SimpleStorage.initialize.selector, _dao, number));
+        plugin = createERC1967Proxy(
+            IMPLEMEMTATION, abi.encodeWithSelector(TribeFactory.initialize.selector, _dao, daoFactory)
+        );
 
         PermissionLib.MultiTargetPermission[] memory permissions = new PermissionLib.MultiTargetPermission[](1);
 
@@ -34,7 +35,7 @@ contract SimpleStorageSetup is PluginSetup {
             where: plugin,
             who: _dao,
             condition: PermissionLib.NO_CONDITION,
-            permissionId: keccak256("STORE_PERMISSION")
+            permissionId: keccak256("UPDATE_PERMISSION")
         });
 
         preparedSetupData.permissions = permissions;
@@ -56,7 +57,7 @@ contract SimpleStorageSetup is PluginSetup {
             where: _payload.plugin,
             who: _dao,
             condition: PermissionLib.NO_CONDITION,
-            permissionId: keccak256("STORE_PERMISSION")
+            permissionId: keccak256("UPDATE_PERMISSION")
         });
     }
 
